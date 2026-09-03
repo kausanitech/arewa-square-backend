@@ -74,6 +74,7 @@ app.use('/api/buyers', buyerRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/disputes', disputeRoutes);
+app.use('/api/setup', require('./routes/setupRoutes')); // TEMPORARY — see routes/setupRoutes.js, remove after creating your admin account
 
 app.use(notFound);
 app.use(errorHandler);
