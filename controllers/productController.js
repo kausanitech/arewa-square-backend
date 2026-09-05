@@ -34,7 +34,7 @@ async function createProduct(req, res) {
     return res.status(400).json({ message: 'Name, price, and category are required.' });
   }
 
-  const images = (req.files || []).map((f) => `/uploads/${f.filename}`);
+  const images = (req.files || []).map((f) => f.path);
 
   const product = await Product.create({
     seller: seller._id,
@@ -66,7 +66,7 @@ async function updateProduct(req, res) {
   if (description !== undefined) product.description = description;
 
   if (req.files && req.files.length > 0) {
-    product.images = req.files.map((f) => `/uploads/${f.filename}`);
+    product.images = req.files.map((f) => f.path);
   }
 
   await product.save();

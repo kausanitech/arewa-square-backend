@@ -4,7 +4,6 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
-const path = require('path');
 
 const connectDB = require('./config/db');
 const { notFound, errorHandler } = require('./middleware/errorHandler');
@@ -61,9 +60,9 @@ app.use(
   })
 );
 
-// Serve uploaded files. KNOWN GAP: local disk on Railway is wiped on every
-// redeploy — see middleware/upload.js for the Cloudinary/S3 migration note.
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+// Uploaded files (shop photos, gov IDs, product images) are served
+// directly from Cloudinary now — see middleware/upload.js. Nothing to
+// serve locally anymore.
 
 // ── Routes ──
 app.get('/api/health', (req, res) => res.json({ status: 'ok', time: new Date().toISOString() }));
@@ -74,6 +73,7 @@ app.use('/api/buyers', buyerRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/disputes', disputeRoutes);
+app.use('/api/setup', require('./routes/setupRoutes')); // TEMPORARY — see routes/setupRoutes.js, remove after creating your admin account
 
 app.use(notFound);
 app.use(errorHandler);

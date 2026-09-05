@@ -1,44 +1,42 @@
 const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
+const { v2: cloudinary } = require('cloudinary');
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
 // ══════════════════════════════════════════════════════════
-// KNOWN GAP: this stores uploads on local disk, which Railway
-// wipes on every redeploy. Fine for local development, NOT safe
-// for production. To migrate to Cloudinary or S3:
-//   1. Replace `storage` below with a Cloudinary/S3 multer
-//      storage engine (e.g. multer-storage-cloudinary).
-//   2. In the controllers, replace `req.file.filename`/
-//      `req.files.map(f => f.filename)` with the URL the
-//      storage engine returns (e.g. req.file.path for
-//      multer-storage-cloudinary).
-//   Nothing else in the codebase needs to change — every
-//   controller already just stores whatever URL string it gets.
+// File uploads now go straight to Cloudinary — this replaces the
+// earlier local-disk version, which Railway wiped on every redeploy.
+//
+// Requires three Railway variables:
+//   CLOUDINARY_CLOUD_NAME
+//   CLOUDINARY_API_KEY
+//   CLOUDINARY_API_SECRET
+// (find all three on your Cloudinary dashboard homepage)
+//
+// Controllers read the uploaded file's URL from `file.path`, which
+// multer-storage-cloudinary sets to the final secure Cloudinary URL —
+// see authController.js and productController.js.
 // ══════════════════════════════════════════════════════════
 
-const uploadDir = path.join(__dirname, '..', 'uploads');
-if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, uploadDir),
-  filename: (req, file, cb) => {
-    const unique = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    cb(null, unique + path.extname(file.originalname));
+const storage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: 'arewa-square',
+    allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
+    // Keeps uploads reasonably sized without the seller needing to think about it.
+    transformation: [{ width: 1600, height: 1600, crop: 'limit' }],
   },
 });
 
-const fileFilter = (req, file, cb) => {
-  const allowed = /jpeg|jpg|png|webp/;
-  const extOk = allowed.test(path.extname(file.originalname).toLowerCase());
-  const mimeOk = allowed.test(file.mimetype);
-  if (extOk && mimeOk) return cb(null, true);
-  cb(new Error('Only .jpg, .jpeg, .png, and .webp image files are allowed.'));
-};
-
 const upload = multer({
   storage,
-  fileFilter,
   limits: { fileSize: (Number(process.env.MAX_UPLOAD_SIZE_MB) || 5) * 1024 * 1024 },
 });
 
 module.exports = upload;
+

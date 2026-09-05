@@ -69,8 +69,8 @@ async function registerSeller(req, res) {
     description,
     latitude: latitude !== undefined && latitude !== '' ? Number(latitude) : null,
     longitude: longitude !== undefined && longitude !== '' ? Number(longitude) : null,
-    shopPhotoUrl: shopPhotoFile ? `/uploads/${shopPhotoFile.filename}` : null,
-    govIdUrl: govIdFile ? `/uploads/${govIdFile.filename}` : null,
+    shopPhotoUrl: shopPhotoFile ? shopPhotoFile.path : null,
+    govIdUrl: govIdFile ? govIdFile.path : null,
     status: 'pending',
   });
 
