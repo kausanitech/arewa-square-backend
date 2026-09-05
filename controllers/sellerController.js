@@ -78,6 +78,7 @@ async function updateMyShop(req, res) {
   });
   if (req.body.latitude !== undefined) seller.latitude = Number(req.body.latitude);
   if (req.body.longitude !== undefined) seller.longitude = Number(req.body.longitude);
+  if (req.file) seller.shopPhotoUrl = req.file.path; // new banner/shop photo, uploaded straight to Cloudinary
 
   await seller.save();
   res.json({ seller });

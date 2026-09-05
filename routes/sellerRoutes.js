@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { protect, requireRole, optionalAuth } = require('../middleware/auth');
+const upload = require('../middleware/upload');
 const asyncHandler = require('../utils/asyncHandler');
 const {
   listSellers,
@@ -19,7 +20,10 @@ router.get('/', optionalAuth, asyncHandler(listSellers));
 
 // Seller's own shop
 router.get('/me', protect, requireRole('seller'), asyncHandler(getMyShop));
-router.put('/profile', protect, requireRole('seller'), asyncHandler(updateMyShop));
+// upload.single() safely no-ops when the request isn't multipart (i.e. the
+// seller only changed text fields and didn't touch the banner upload) —
+// same pattern as /auth/register.
+router.put('/profile', protect, requireRole('seller'), upload.single('shopPhoto'), asyncHandler(updateMyShop));
 
 // Admin actions
 router.put('/:id/approve', protect, requireRole('admin'), asyncHandler(approveSeller));
