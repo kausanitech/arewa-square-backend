@@ -19,6 +19,13 @@ const app = express();
 
 connectDB();
 
+// Railway (and most hosts) sit their app behind a reverse proxy, so every
+// request arrives with an X-Forwarded-For header already set. Without this,
+// express-rate-limit refuses to trust that header (correctly, since an
+// untrusted proxy setting would let it be spoofed to dodge rate limits) and
+// throws on every request instead of just working.
+app.set('trust proxy', 1);
+
 // ── Security & parsing middleware ──
 app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } })); // cross-origin so uploaded images load from the frontend's domain
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
