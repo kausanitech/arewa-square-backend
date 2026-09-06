@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const upload = require('../middleware/upload');
 const asyncHandler = require('../utils/asyncHandler');
-const { register, login } = require('../controllers/authController');
+const { register, login, forgotPassword, resetPassword } = require('../controllers/authController');
 
 // upload.fields() safely no-ops for non-multipart requests (buyer JSON
 // registration), so this one route serves both buyer and seller signup —
@@ -17,5 +17,7 @@ router.post(
 );
 
 router.post('/login', asyncHandler(login));
+router.post('/forgot-password', asyncHandler(forgotPassword));
+router.post('/reset-password', asyncHandler(resetPassword));
 
 module.exports = router;

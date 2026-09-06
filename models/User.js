@@ -10,6 +10,12 @@ const userSchema = new mongoose.Schema(
     role: { type: String, enum: ['buyer', 'seller', 'admin'], required: true, default: 'buyer' },
     state: { type: String, trim: true },
     city: { type: String, trim: true },
+
+    // Password reset — resetPasswordToken stores a HASH of the token
+    // emailed to the user, never the plaintext token itself. See
+    // controllers/authController.js forgotPassword/resetPassword.
+    resetPasswordToken: { type: String, default: null, select: false },
+    resetPasswordExpires: { type: Date, default: null, select: false },
   },
   { timestamps: true }
 );
