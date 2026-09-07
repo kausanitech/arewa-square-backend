@@ -1,42 +1,41 @@
-const nodemailer = require('nodemailer');
-
 // ══════════════════════════════════════════════════════════
-// Generic SMTP email sender. Works with Gmail, Outlook, Zoho,
-// or any provider that gives you SMTP credentials.
+// Sends email via Resend's HTTPS API — NOT raw SMTP.
 //
-// Required Railway variables:
-//   EMAIL_HOST      e.g. smtp.gmail.com
-//   EMAIL_PORT      e.g. 587
-//   EMAIL_USER      the mailbox address that sends the email
-//   EMAIL_PASS      an app password (NOT your normal account password —
-//                   see the Gmail setup note in the README)
-//   EMAIL_FROM      what recipients see as the sender, e.g.
-//                   "AREWA SQUARE <arewasquare@gmail.com>"
+// Why: Railway (like most cloud hosts) blocks outbound SMTP
+// connections (ports 25/465/587) on free/hobby plans to prevent
+// spam abuse. That's a platform-level restriction, not something
+// fixable in code. Resend's API is a normal HTTPS request, so it
+// works the same way your Cloudinary uploads already do — no
+// blocked ports involved.
+//
+// Setup: sign up free at resend.com, verify a sending domain (or
+// use their shared onboarding domain to start), get an API key,
+// and add it as RESEND_API_KEY in Railway.
 // ══════════════════════════════════════════════════════════
-
-function getTransporter() {
-  return nodemailer.createTransport({
-    host: process.env.EMAIL_HOST,
-    port: Number(process.env.EMAIL_PORT) || 587,
-    secure: Number(process.env.EMAIL_PORT) === 465, // true for port 465, false for 587/others
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
-  });
-}
 
 async function sendEmail({ to, subject, html }) {
-  if (!process.env.EMAIL_HOST || !process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-    throw new Error('Email is not configured on the server yet (missing EMAIL_HOST/EMAIL_USER/EMAIL_PASS).');
+  if (!process.env.RESEND_API_KEY) {
+    throw new Error('Email is not configured on the server yet (missing RESEND_API_KEY).');
   }
-  const transporter = getTransporter();
-  await transporter.sendMail({
-    from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
-    to,
-    subject,
-    html,
+
+  const res = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      from: process.env.EMAIL_FROM || 'AREWA SQUARE <onboarding@resend.dev>',
+      to,
+      subject,
+      html,
+    }),
   });
+
+  if (!res.ok) {
+    const errBody = await res.text();
+    throw new Error(`Resend API error (${res.status}): ${errBody}`);
+  }
 }
 
 module.exports = sendEmail;
