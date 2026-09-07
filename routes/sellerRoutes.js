@@ -7,10 +7,12 @@ const {
   listSellers,
   getMyShop,
   updateMyShop,
+  adminUpdateSeller,
   approveSeller,
   rejectSeller,
   suspendSeller,
   reactivateSeller,
+  deleteSeller,
 } = require('../controllers/sellerController');
 
 // Public list (buyer-dashboard.html, index.html) — but shows every status
@@ -30,5 +32,7 @@ router.put('/:id/approve', protect, requireRole('admin'), asyncHandler(approveSe
 router.put('/:id/reject', protect, requireRole('admin'), asyncHandler(rejectSeller));
 router.put('/:id/suspend', protect, requireRole('admin'), asyncHandler(suspendSeller));
 router.put('/:id/reactivate', protect, requireRole('admin'), asyncHandler(reactivateSeller));
+router.put('/:id', protect, requireRole('admin'), asyncHandler(adminUpdateSeller));
+router.delete('/:id', protect, requireRole('admin'), asyncHandler(deleteSeller));
 
 module.exports = router;

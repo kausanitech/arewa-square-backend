@@ -16,6 +16,14 @@ const userSchema = new mongoose.Schema(
     // controllers/authController.js forgotPassword/resetPassword.
     resetPasswordToken: { type: String, default: null, select: false },
     resetPasswordExpires: { type: Date, default: null, select: false },
+
+    // Account moderation — used by admin.html's Manage Buyers/Sellers.
+    // Suspension is reversible; isDeleted marks an anonymized, permanently
+    // locked-out account (see controllers/*Controller.js delete functions
+    // for why we anonymize rather than hard-delete when order history exists).
+    isSuspended: { type: Boolean, default: false },
+    suspendedReason: { type: String, default: null },
+    isDeleted: { type: Boolean, default: false },
   },
   { timestamps: true }
 );
