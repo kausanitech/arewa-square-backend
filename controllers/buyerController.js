@@ -25,4 +25,37 @@ async function listBuyers(req, res) {
   res.json({ buyers: shaped });
 }
 
-module.exports = { listBuyers };
+// GET /api/buyers/me — the logged-in buyer's own profile, read by
+// buyer-dashboard.html's Profile tab (and its sidebar/greeting).
+async function getMyProfile(req, res) {
+  const buyer = await Buyer.findOne({ user: req.user._id }).populate('user', 'fullName phone email createdAt');
+  if (!buyer) return res.status(404).json({ message: 'No buyer profile found for this account.' });
+
+  res.json({
+    buyer: {
+      _id: buyer._id,
+      city: buyer.city,
+      state: buyer.state,
+      createdAt: buyer.user?.createdAt || buyer.createdAt,
+      user: {
+        fullName: buyer.user?.fullName,
+        email: buyer.user?.email,
+        phone: buyer.user?.phone,
+      },
+    },
+  });
+}
+
+// PUT /api/buyers/profile — the logged-in buyer updates their own city/state
+async function updateMyProfile(req, res) {
+  const buyer = await Buyer.findOne({ user: req.user._id });
+  if (!buyer) return res.status(404).json({ message: 'No buyer profile found for this account.' });
+
+  if (req.body.city !== undefined) buyer.city = req.body.city;
+  if (req.body.state !== undefined) buyer.state = req.body.state;
+  await buyer.save();
+
+  res.json({ message: 'Profile updated.', buyer });
+}
+
+module.exports = { listBuyers, getMyProfile, updateMyProfile };
