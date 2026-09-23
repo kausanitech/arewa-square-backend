@@ -57,15 +57,14 @@ app.use(
   })
 );
 
-// Tighter limiting on auth routes specifically, against credential stuffing.
-app.use(
-  '/api/auth',
-  rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 20,
-    message: { message: 'Too many attempts. Please try again in a few minutes.' },
-  })
-);
+// Auth routes get their own, more carefully tuned limits — see
+// routes/authRoutes.js. A single blanket limit here used to cover
+// register/login/forgot-password together, which was too strict for
+// registration specifically: it's a large multipart upload (shop photo +
+// ID) that legitimately takes a while and sometimes needs a genuine retry
+// on slow mobile connections, and many real users in Nigeria share one
+// public IP behind carrier-grade NAT — so a low shared limit was locking
+// out innocent users, not just abusive ones.
 
 // Uploaded files (shop photos, gov IDs, product images) are served
 // directly from Cloudinary now — see middleware/upload.js. Nothing to
